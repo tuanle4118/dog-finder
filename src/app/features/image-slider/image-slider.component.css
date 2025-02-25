@@ -1,0 +1,7 @@
+.perspective-1000 {
+  perspective: 1000px; /* Enables 3D effect */
+}
+
+.transform-style-preserve {
+  transform-style: preserve-3d;
+}
