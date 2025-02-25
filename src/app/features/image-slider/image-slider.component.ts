@@ -1,102 +1,93 @@
+import { CommonModule } from '@angular/common';
 import {
   Component,
   ElementRef,
+  HostListener,
   OnInit,
-  Renderer2,
   ViewChild,
 } from '@angular/core';
-import { IDogInformation } from '@app/core/models/interfaces';
+import { Vote } from '@app/core/models/enums';
+import {
+  Actions,
+  IDogInformation,
+  VotePayload,
+} from '@app/core/models/interfaces';
 import { ApiService } from '@services/api.service';
 import { ButtonModule } from 'primeng/button';
+import { Subject, forkJoin } from 'rxjs';
+import { ImageInformationComponent } from '../image-information/image-information.component';
 
 @Component({
   selector: 'app-image-slider',
   standalone: true,
-  imports: [ButtonModule],
+  imports: [ButtonModule, CommonModule, ImageInformationComponent],
   templateUrl: './image-slider.component.html',
   styleUrl: './image-slider.component.css',
 })
 export class ImageSliderComponent implements OnInit {
-  @ViewChild('swipeBox') swipeBox!: ElementRef;
+  @HostListener('window:beforeunload', ['$event'])
+  onBeforeUnload(event: BeforeUnloadEvent): void {
+    //Store latest id into local storage
+    event.preventDefault();
+    localStorage.setItem(
+      'latestImageId',
+      this.dogInformationList?.[this.currentDisplayIndex]?.id,
+    );
+  }
+
+  @ViewChild('swipeBox')
+  swipeBox!: ElementRef;
   startX = 0;
   currentX = 0;
   isSwiping = false;
-  dogInformation: IDogInformation[] = [];
-  test_image: IDogInformation | undefined;
+  dogInformationList: IDogInformation[] = [];
+  currentDisplayIndex = 0;
+  voteEvent: Subject<Actions> = new Subject<Actions>();
 
-  constructor(
-    private apiService: ApiService,
-    private renderer: Renderer2,
-  ) {}
+  constructor(private readonly apiService: ApiService) {}
 
   ngOnInit(): void {
-    this.apiService.getDogImages().subscribe((res) => {
-      this.dogInformation = res;
+    // Check if latest image id exist in local storage
+    const latestId = localStorage.getItem('latestImageId');
+    if (latestId && latestId !== 'undefined') {
+      forkJoin({
+        latestDogInfo: this.apiService.getSpecificDog(latestId),
+        dogInfoList: this.apiService.getDogInformationList(),
+      }).subscribe((res) => {
+        this.dogInformationList.push(res.latestDogInfo, ...res.dogInfoList);
+      });
+      localStorage.removeItem('latestImageId');
+      return;
+    }
+
+    this.handleFetchData();
+  }
+
+  handleFetchData() {
+    this.apiService.getDogInformationList().subscribe((res) => {
+      this.dogInformationList.push(...res);
     });
-
-    // this.apiService
-    //   .getDogDetails('32')
-    //   .subscribe((res) => (this.test_image = res));
   }
 
-  onPanStart(event: any) {
-    this.startX = event.center.x;
-    this.isSwiping = true;
+  handleVote(action: Actions) {
+    const payload: VotePayload = {
+      image_id: this.dogInformationList[this.currentDisplayIndex].id,
+      sub_id: 'TuanLDN',
+      value: Vote[action],
+    };
+    this.apiService.voteDog(payload).subscribe();
   }
 
-  onPanMove(event: any) {
-    if (this.isSwiping) {
-      this.currentX = event.center.x - this.startX;
-      this.renderer.setStyle(
-        this.swipeBox.nativeElement,
-        'transform',
-        `translateX(${this.currentX}px)`,
-      );
+  handleUpdateData(event: 'like' | 'dislike') {
+    this.handleVote(event);
+    this.currentDisplayIndex++;
+
+    if (this.currentDisplayIndex === this.dogInformationList?.length - 3) {
+      this.handleFetchData();
     }
   }
 
-  onPanEnd(event: any) {
-    this.isSwiping = false;
-
-    // Animate back to original position if swipe distance is small
-    if (Math.abs(this.currentX) < 100) {
-      this.renderer.setStyle(
-        this.swipeBox.nativeElement,
-        'transition',
-        'transform 0.3s ease-out',
-      );
-      this.renderer.setStyle(
-        this.swipeBox.nativeElement,
-        'transform',
-        `translateX(0px)`,
-      );
-    } else {
-      // Animate slide-out effect
-      const direction = this.currentX > 0 ? '100vw' : '-100vw';
-      this.renderer.setStyle(
-        this.swipeBox.nativeElement,
-        'transition',
-        'transform 0.3s ease-out',
-      );
-      this.renderer.setStyle(
-        this.swipeBox.nativeElement,
-        'transform',
-        `translateX(${direction})`,
-      );
-
-      // Reset position after animation
-      setTimeout(() => {
-        this.renderer.setStyle(
-          this.swipeBox.nativeElement,
-          'transition',
-          'none',
-        );
-        this.renderer.setStyle(
-          this.swipeBox.nativeElement,
-          'transform',
-          'translateX(0px)',
-        );
-      }, 300);
-    }
+  onClickVote(event: Actions) {
+    this.voteEvent.next(event);
   }
 }

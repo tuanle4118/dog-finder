@@ -1,28 +1,33 @@
-<div class="h-[80vh] w-[45vw] overflow-hidden rounded-xl border-2 border-white">
-  <section class="relative h-full w-full">
-    <img
-      (panstart)="onPanStart($event)"
-      (panmove)="onPanMove($event)"
-      (panend)="onPanEnd($event)"
-      #swipeBox
-      [draggable]="false"
-      src="{{ dogInformation[0]?.url }}"
-      class="h-full w-full object-cover"
-      alt="dog"
-    />
-    <div
-      class="absolute bottom-0 flex h-fit w-full items-center justify-between bg-gray-700/60 p-10"
-    >
-      <p-button icon="pi pi-times" severity="danger" size="large" />
-      <span class="z-10 grid text-center text-white">
-        <span class="text-3xl font-bold">{{
-          dogInformation[0]?.breeds?.[0]?.name ?? "Name"
-        }}</span>
-        <span>{{
-          dogInformation[0]?.breeds?.[0]?.bred_for ?? "Bred For"
-        }}</span>
-      </span>
-      <p-button icon="pi pi-heart-fill" severity="success" size="large" />
-    </div>
-  </section>
+<div
+  class="relative h-[80vh] w-[45vw] min-w-96 overflow-hidden rounded-xl border-2 border-white"
+>
+  <div class="absolute left-0 top-0 h-full w-full">
+    <app-image-information
+      [zIndex]="20"
+      [bredInfo]="dogInformationList[currentDisplayIndex]?.breeds?.[0]"
+      [imageUrl]="dogInformationList[currentDisplayIndex]?.url"
+      [event]="voteEvent"
+      (action)="handleUpdateData($event)"
+    ></app-image-information>
+  </div>
+
+  <app-image-information
+    [bredInfo]="dogInformationList[currentDisplayIndex + 1]?.breeds?.[0]"
+    [imageUrl]="dogInformationList[currentDisplayIndex + 1]?.url"
+  ></app-image-information>
+
+  <p-button
+    (onClick)="onClickVote('dislike')"
+    class="absolute bottom-10 left-5 z-20"
+    icon="pi pi-times"
+    severity="danger"
+    size="large"
+  />
+  <p-button
+    (onClick)="onClickVote('like')"
+    class="absolute bottom-10 right-5 z-20"
+    icon="pi pi-heart-fill"
+    severity="success"
+    size="large"
+  />
 </div>

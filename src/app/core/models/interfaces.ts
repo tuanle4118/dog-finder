@@ -1,9 +1,9 @@
 export interface IDogInformation {
   id: string;
-  url: string;
+  url?: string;
   height: number;
   width: number;
-  breeds: Breed[];
+  breeds?: Breed[];
 }
 
 export interface Breed {
@@ -24,3 +24,11 @@ export interface Breed {
   temperament: string;
   reference_image_id: string;
 }
+
+export interface VotePayload {
+  image_id: string;
+  sub_id: string;
+  value: number;
+}
+
+export type Actions = 'like' | 'dislike';
