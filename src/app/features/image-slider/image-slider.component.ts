@@ -78,7 +78,7 @@ export class ImageSliderComponent implements OnInit {
     this.apiService.voteDog(payload).subscribe();
   }
 
-  handleUpdateData(event: 'like' | 'dislike') {
+  handleUpdateData(event: Actions) {
     this.handleVote(event);
     this.currentDisplayIndex++;
 

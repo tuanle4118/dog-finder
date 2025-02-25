@@ -31,4 +31,4 @@ export interface VotePayload {
   value: number;
 }
 
-export type Actions = 'like' | 'dislike';
+export type Actions = 'like' | 'dislike' | 'super_like';

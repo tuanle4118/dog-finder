@@ -23,9 +23,18 @@
     severity="danger"
     size="large"
   />
+
+  <p-button
+    (onClick)="onClickVote('super_like')"
+    class="absolute bottom-16 right-5 z-20"
+    icon="pi pi-star-fill"
+    severity="warn"
+    size="large"
+  />
+
   <p-button
     (onClick)="onClickVote('like')"
-    class="absolute bottom-10 right-5 z-20"
+    class="absolute bottom-5 right-5 z-20"
     icon="pi pi-heart-fill"
     severity="success"
     size="large"
